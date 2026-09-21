@@ -12,6 +12,8 @@ import java.awt.event.ActionEvent;
 import java.util.Random;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.Timer;
 
 /**
  *
@@ -42,7 +44,11 @@ public class Jogo extends javax.swing.JFrame {
     //variavel para guardar as bombas / quantidade de bombas
     int quantidadeBombas = 15;
     int quantidadeCasasAbertas = 0;
+    
     boolean jogoEncerrado = false;
+    
+    int segundosPassados = 0;
+    Timer cronometro;
     
     
     //CONSTRUTOR DA CLASSE - SEM ELE A TELA NAO FUNCIONA
@@ -52,6 +58,8 @@ public class Jogo extends javax.swing.JFrame {
         painelcampo.setPreferredSize(new Dimension(900,700));
         
         CriarTabuleiro();
+        
+        
     }
     
     //  CRIAR AS NOSSAS FUNCOES/METODOS
@@ -114,7 +122,11 @@ public class Jogo extends javax.swing.JFrame {
     
     public void IniciarJogo(){
         //chamar o metodo adicionarBombas
+        LimparJogo();
         AdicionarBombas();
+        IniciarCronometro();
+        
+        
         
         //depois iniciar os botoes do jogo
         for(int colunas = 0;colunas<=9;colunas++){
@@ -135,33 +147,125 @@ public class Jogo extends javax.swing.JFrame {
         if(abertos[linha][coluna]) return;        
         //se o jogo ainda estiver rodando, e o botao ainda nao tiver sido aberto - entao vamos abrir o botao
         abertos[linha][coluna]=true;
-        quantidadeCasasAbertas++;        
+        quantidadeCasasAbertas++; 
+        
         //acessar o que tem dentro do botao
         JButton botao = btnCampos[linha][coluna];        
         //se no botao tiver uma bomba, entao vamos mostrar a bomba a ele
         if(bombas[linha][coluna]){
-           ImageIcon imgBomba = new ImageIcon(getClass().getResource("Interface/bomb.png"));
+           ImageIcon imgBomba = new ImageIcon(getClass().getResource("/assets/bomb.png"));
            //colocar a img no botao
            botao.setIcon(imgBomba);
+           FinalizarJogo(false);
            return;
         }else{
             ImageIcon imgBandeira = new ImageIcon(
-            getClass().getResource("/Interface/flag.png"));
-            botao.setIcon(imgBandeira);            
-        }
-        
-        
-        
-        
-        
+            getClass().getResource("/assets/flag.png"));
+            botao.setIcon(imgBandeira); 
+            return;
+        } 
     }//fim do metodo abrir botao
     
+    public void FinalizarJogo(boolean venceu){
+        //informar que o jogo acabou
+        mostrarBombas();
+        jogoEncerrado=true;
+        cronometro.stop();
+        
+        
+       //verificar se a paeesoa venceu ou nao
+      if(venceu){
+          JOptionPane.showMessageDialog(
+                  this,"Parabéns você venceu!"); 
+          LimparJogo();
+      }else{
+          JOptionPane.showMessageDialog(
+                   this,"Ops, voce perdeu o jogo!");
+          LimparJogo();
+      }  
+        
+        
+        
+    }//Fim do FinalizarJogo
     
+    public void VerificarVitoria(){
+        //armazenar a quantidade de casas com bandeiras
+        int casasSemBomba=100 - quantidadeBombas;
+        
+        if(quantidadeCasasAbertas == casasSemBomba){
+            //se a pessoa abriu todas as bandeiras e nao abriu nenhuma bomba
+            //entao ela venceu o jogo, e o FinalizarJogo imprime a mensagem
+            FinalizarJogo(true);
+        }
+    }
     
+    public void IniciarCronometro(){
+        //zerar o cronometro caso tenha tido um jogo anterior
+        if(cronometro != null){
+            cronometro.stop();
+        }
+        
+        segundosPassados = 0;
+        tfTempo.setText("00:00");
+        
+        //converter o tempo em minutos e segundos
+        //o cronometro conta de 1 em 1 segundo, e vai convertendo
+        cronometro = new Timer(1000, Evento->{
+            segundosPassados++;
+            int minutos = segundosPassados/60;
+            int horas = minutos/60;
+            int segundo = segundosPassados%60;
+           //mostrar o tempo dentro da variavel
+           
+           tfTempo.setText(
+           String.format("%02d:%02d:%02d",horas,minutos,segundo));
+           
+           
+        });
+        cronometro.start();
+        
+        
+        
+    }
     
+    public void LimparJogo(){
+        quantidadeCasasAbertas=0;
+        jogoEncerrado=false;
+        
+       for(int coluna=0;coluna<=9;coluna++){
+          for(int linha=0;linha<=9;linha++){
+              bombas[linha][coluna]=false;
+              abertos[linha][coluna]=false;
+              
+              //limpeza dos botoes
+              JButton botao = btnCampos[linha][coluna];
+              botao.setIcon(null);
+              
+          } //fim do 2° for
+       } //fim do 1°for  
+       AdicionarBombas();
+       IniciarCronometro();
+       
+    } //fim do LimparJogo
     
-    
-    
+    public void mostrarBombas(){
+        for(int coluna=0;coluna<=9;coluna++){
+            for(int linha=0;linha<=9;linha++){
+                JButton botao = btnCampos[linha][coluna];        
+        //se no botao tiver uma bomba, entao vamos mostrar a bomba a ele
+        if(bombas[linha][coluna]){
+            ImageIcon imgBomba = new ImageIcon(getClass().getResource("/assets/bomb.png"));
+           //colocar a img no botao
+            botao.setIcon(imgBomba);  
+                }else{
+            ImageIcon imgBandeira = new ImageIcon(
+            getClass().getResource("/assets/flag.png"));
+            botao.setIcon(imgBandeira);
+                }
+            
+            }
+        }
+    }   
  /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -177,6 +281,7 @@ public class Jogo extends javax.swing.JFrame {
         painelcampo = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setBackground(new java.awt.Color(0, 0, 0));
 
         Titulo.setBackground(new java.awt.Color(0, 0, 0));
         Titulo.setFont(new java.awt.Font("Palatino Linotype", 1, 48)); // NOI18N
